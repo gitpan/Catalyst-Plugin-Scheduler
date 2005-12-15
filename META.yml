@@ -1,6 +1,6 @@
 ---
 name: Catalyst-Plugin-Scheduler
-version: 0.02
+version: 0.03
 author:
   - 'Andy Grundman, <andy@hybridized.org>'
 abstract: Schedule events to run in a cron-like fashion
@@ -14,5 +14,5 @@ requires:
 provides:
   Catalyst::Plugin::Scheduler:
     file: lib/Catalyst/Plugin/Scheduler.pm
-    version: 0.02
+    version: 0.03
 generated_by: Module::Build version 0.2611

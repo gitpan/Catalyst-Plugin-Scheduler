@@ -12,7 +12,7 @@ use Set::Scalar;
 use Storable qw/lock_store lock_retrieve/;
 use YAML;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 __PACKAGE__->mk_classdata( '_events' => [] );
 __PACKAGE__->mk_accessors('_event_state');
@@ -152,7 +152,7 @@ sub setup {
     $c->config->{scheduler}->{time_zone}   ||= $c->_detect_timezone();
     $c->config->{scheduler}->{state_file}  ||= $c->path_to('scheduler.state');
     $c->config->{scheduler}->{hosts_allow} ||= '127.0.0.1';
-    $c->config->{scheduler}->{yaml}        ||= $c->path_to('scheduler.yml');
+    $c->config->{scheduler}->{yaml_file}   ||= $c->path_to('scheduler.yml');
 
     $c->NEXT::setup(@_);
 }
@@ -166,10 +166,10 @@ sub _check_yaml {
         return if ( time - $c->_event_state->{last_check} < 60 );
     }
 
-    return unless -e $c->config->{scheduler}->{yaml};
+    return unless -e $c->config->{scheduler}->{yaml_file};
 
     eval {
-        my $mtime = ( stat $c->config->{scheduler}->{yaml} )->mtime;
+        my $mtime = ( stat $c->config->{scheduler}->{yaml_file} )->mtime;
         if ( $mtime > $c->_event_state->{yaml_mtime}->{$$} ) {
             $c->_event_state->{yaml_mtime}->{$$} = $mtime;
             $c->_save_event_state();
@@ -177,7 +177,7 @@ sub _check_yaml {
             # wipe out all current events and reload from YAML
             $c->_events( [] );
 
-            my $yaml = YAML::LoadFile( $c->config->{scheduler}->{yaml} );
+            my $yaml = YAML::LoadFile( $c->config->{scheduler}->{yaml_file} );
 
             foreach my $event ( @{$yaml} ) {
                 $c->schedule( %{$event} );

@@ -18,7 +18,8 @@ my $state = { last_check => 0 };
 lock_store $state, $STATE;
 
 # configure a yaml file
-TestApp->config->{scheduler}->{yaml} = "$FindBin::Bin/lib/TestApp/test.yml";
+TestApp->config->{scheduler}->{yaml_file} 
+    = "$FindBin::Bin/lib/TestApp/test.yml";
 
 # test that the plugin event executes
 {
