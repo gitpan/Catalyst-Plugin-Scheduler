@@ -247,6 +247,19 @@ PERFORMANCE
     Of course, when a scheduled event runs, performance will depend on
     what's being run in the event.
 
+METHODS
+  schedule
+    Schedule is a class method for adding scheduled events. See the
+    "SCHEDULING" in " section for more information.
+
+INTERNAL METHODS
+    The following methods are extended by this plugin.
+
+    dispatch
+        The main scheduling logic takes place during the dispatch phase.
+
+    setup
+
 SEE ALSO
     crontab(5)
 

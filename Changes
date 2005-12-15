@@ -1,4 +1,9 @@
 Revision history for Perl extension Catalyst::Plugin::Scheduler
 
+0.02    2005-12-15 15:40:00
+        - Fixed pod coverage.
+        - Hide timezone warning unless logging is enabled.
+        - Hide expected errors during test 4.
+
 0.01    2005-12-15 15:30:00
         - initial release

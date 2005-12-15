@@ -12,7 +12,7 @@ use Set::Scalar;
 use Storable qw/lock_store lock_retrieve/;
 use YAML;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 __PACKAGE__->mk_classdata( '_events' => [] );
 __PACKAGE__->mk_accessors('_event_state');
@@ -202,7 +202,8 @@ sub _detect_timezone {
     eval { $tz = DateTime::TimeZone->new( name => 'local' ) };
     if ($@) {
         $c->log->warn(
-            'Scheduler: Unable to autodetect local time zone, using UTC');
+            'Scheduler: Unable to autodetect local time zone, using UTC')
+            if $c->config->{scheduler}->{logging}; 
         return 'UTC';
     }
     else {
@@ -602,6 +603,27 @@ seconds).
 
 Of course, when a scheduled event runs, performance will depend on what's
 being run in the event.
+
+=head1 METHODS
+
+=head2 schedule
+
+Schedule is a class method for adding scheduled events.  See the
+L<"/SCHEDULING> section for more information.
+
+=head1 INTERNAL METHODS
+
+The following methods are extended by this plugin.
+
+=over 4
+
+=item dispatch
+
+The main scheduling logic takes place during the dispatch phase.
+
+=item setup
+
+=back
     
 =head1 SEE ALSO
 

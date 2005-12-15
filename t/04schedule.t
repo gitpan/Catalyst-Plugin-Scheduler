@@ -40,6 +40,7 @@ lock_store $state, $STATE;
 
 # test that all events execute, and that the error test doesn't break the app
 {
+    open STDERR, '>/dev/null';
     ok( my $res = request('http://localhost/'), 'request ok' );
     is( $res->content, 'default', 'response ok' );
     is( -e "$FindBin::Bin/lib/TestApp/every_minute.log", 1, 'every_minute executed ok' );
