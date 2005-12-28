@@ -250,13 +250,17 @@ PERFORMANCE
 METHODS
   schedule
     Schedule is a class method for adding scheduled events. See the
-    "SCHEDULING" in " section for more information.
+    "/SCHEDULING" section for more information.
 
 INTERNAL METHODS
     The following methods are extended by this plugin.
 
     dispatch
         The main scheduling logic takes place during the dispatch phase.
+
+    dump_these
+        On the Catalyst debug screen, all scheduled events are displayed
+        along with the next time they will be executed.
 
     setup
 

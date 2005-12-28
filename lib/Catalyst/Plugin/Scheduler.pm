@@ -12,7 +12,7 @@ use Set::Scalar;
 use Storable qw/lock_store lock_retrieve/;
 use YAML;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 __PACKAGE__->mk_classdata( '_events' => [] );
 __PACKAGE__->mk_accessors('_event_state');
@@ -48,6 +48,7 @@ sub schedule {
                     . $@ );
         }
         else {
+            $event->{at}  = $args{at};
             $event->{set} = $set;
         }
     }
@@ -156,6 +157,47 @@ sub setup {
 
     $c->NEXT::setup(@_);
 }
+
+sub dump_these {
+    my $c = shift;
+    
+    return ( $c->NEXT::dump_these(@_) ) unless @{ $c->_events };
+    
+    # for debugging, we dump out a list of all events with their next
+    # scheduled run time
+
+    my $conf = $c->config->{scheduler};
+    my $now  = DateTime->now( time_zone => $conf->{time_zone} );
+    
+    my $last_check = $c->_event_state->{last_check};
+    my $last_check_dt = DateTime->from_epoch(
+        epoch     => $last_check,
+        time_zone => $conf->{time_zone}
+    ); 
+
+    my $event_dump = [];
+    for my $event ( @{ $c->_events } ) {
+        my $dump = {};
+        for my $key ( qw/at trigger event auto_run/ ) {
+            $dump->{$key} = $event->{$key} if $event->{$key};
+        }
+
+        if ( $event->{set} ) {
+            my $next_run = $event->{set}->next($last_check_dt);
+            $dump->{next_run} 
+                = $next_run->ymd 
+                . q{ } . $next_run->hms 
+                . q{ } . $next_run->time_zone_short_name;
+        }
+        
+        push @{$event_dump}, $dump;
+    }
+    
+    return ( 
+        $c->NEXT::dump_these(@_),
+        [ 'Scheduled Events', $event_dump ],
+    );
+}        
 
 # check and reload the YAML file with schedule data
 sub _check_yaml {
@@ -609,7 +651,7 @@ being run in the event.
 =head2 schedule
 
 Schedule is a class method for adding scheduled events.  See the
-L<"/SCHEDULING> section for more information.
+L<"/SCHEDULING"> section for more information.
 
 =head1 INTERNAL METHODS
 
@@ -620,6 +662,11 @@ The following methods are extended by this plugin.
 =item dispatch
 
 The main scheduling logic takes place during the dispatch phase.
+
+=item dump_these
+
+On the Catalyst debug screen, all scheduled events are displayed along with
+the next time they will be executed.
 
 =item setup
 
