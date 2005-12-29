@@ -1,5 +1,8 @@
 Revision history for Perl extension Catalyst::Plugin::Scheduler
 
+0.05    2005-12-29 15:50:00
+        - Fixed bug when using @monthly.
+
 0.04    2005-12-28 15:15:00
         - Added dump_these support to display all event info on the
           debug screen.

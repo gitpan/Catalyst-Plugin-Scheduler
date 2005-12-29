@@ -12,7 +12,7 @@ use Set::Scalar;
 use Storable qw/lock_store lock_retrieve/;
 use YAML;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 __PACKAGE__->mk_classdata( '_events' => [] );
 __PACKAGE__->mk_accessors('_event_state');
@@ -26,7 +26,7 @@ sub schedule {
     }
 
     my $conf = $class->config->{scheduler};
-
+    
     my $event = {
         trigger  => $args{trigger},
         event    => $args{event},
@@ -37,7 +37,7 @@ sub schedule {
 
         # replace keywords that Set::Crontab doesn't support
         $args{at} = _prepare_cron( $args{at} );
-
+        
         # parse the cron entry into a DateTime::Set
         my $set;
         eval { $set = DateTime::Event::Cron->from_cron( $args{at} ) };
@@ -220,7 +220,7 @@ sub _check_yaml {
             $c->_events( [] );
 
             my $yaml = YAML::LoadFile( $c->config->{scheduler}->{yaml_file} );
-
+            
             foreach my $event ( @{$yaml} ) {
                 $c->schedule( %{$event} );
             }
@@ -353,7 +353,9 @@ sub _prepare_cron {
         thu => 4,
         fri => 5,
         sat => 6,
-
+    );
+    
+    my %replace_at = (
         'yearly'   => '0 0 1 1 *',
         'annually' => '0 0 1 1 *',
         'monthly'  => '0 0 1 * *',
@@ -362,20 +364,17 @@ sub _prepare_cron {
         'midnight' => '0 0 * * *',
         'hourly'   => '0 * * * *',
     );
+    
+    if ( $cron =~ /^\@/ ) {
+        $cron =~ s/^\@//;
+        return $replace_at{ $cron };
+    }
 
     for my $name ( keys %replace ) {
         my $value = $replace{$name};
-
-        if ( $cron =~ /^\@$name/ ) {
-            $cron = $value;
-            last;
-        }
-        else {
-            $cron =~ s/$name/$value/i;
-            last unless $cron =~ /\w/;
-        }
+        $cron =~ s/$name/$value/i;
+        last unless $cron =~ /\w/;
     }
-
     return $cron;
 }
 
