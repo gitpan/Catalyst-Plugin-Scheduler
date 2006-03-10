@@ -252,6 +252,32 @@ METHODS
     Schedule is a class method for adding scheduled events. See the
     "/SCHEDULING" section for more information.
 
+  scheduler_state
+    The current state of all scheduled events is available in an easy-to-use
+    format by calling $c->scheduler_state. You can use this data to build an
+    admin view into the scheduling engine, for example. This same data is
+    also displayed on the Catalyst debug screen.
+
+    This method returns an array reference containing a hash reference for
+    each event.
+
+        [
+            {
+                'last_run'    => '2005-12-29 16:29:33 EST',
+                'auto_run'    => 1,
+                'last_output' => 1,
+                'at'          => '0 0 * * *',
+                'next_run'    => '2005-12-30 00:00:00 EST',
+                'event'       => '/cron/session_cleanup'
+            },
+            {
+                'auto_run'    => 1,
+                'at'          => '0 0 * * *',
+                'next_run'    => '2005-12-30 00:00:00 EST',
+                'event'       => '/cron/build_rss'
+            },
+        ]
+
 INTERNAL METHODS
     The following methods are extended by this plugin.
 

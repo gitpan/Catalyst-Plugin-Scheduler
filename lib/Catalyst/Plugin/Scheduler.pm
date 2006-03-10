@@ -12,7 +12,7 @@ use Set::Scalar;
 use Storable qw/lock_store lock_retrieve/;
 use YAML;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 __PACKAGE__->mk_classdata( '_events' => [] );
 __PACKAGE__->mk_accessors('_event_state');
@@ -85,7 +85,7 @@ sub dispatch {
     for my $event ( @{ $c->_events } ) {
         my $next_run;
 
-        if (   $event->{trigger}
+        if (   $event->{trigger} && $c->req->params->{schedule_trigger}
             && $event->{trigger} eq $c->req->params->{schedule_trigger} )
         {
 
@@ -114,6 +114,9 @@ sub dispatch {
 
             # trap errors
             local $c->{error} = [];
+            
+            # return value/output from the event, if any
+            my $output;
 
             # run event
             eval {
@@ -126,10 +129,10 @@ sub dispatch {
                 local $c->res->{status};
 
                 if ( ref $event->{event} eq 'CODE' ) {
-                    $event->{event}->($c);
+                    $output = $event->{event}->($c);
                 }
                 else {
-                    $c->forward( $event->{event} );
+                    $output = $c->forward( $event->{event} );
                 }
             };
             my @errors = @{ $c->{error} };
@@ -138,9 +141,10 @@ sub dispatch {
                 $c->log->error(
                     'Scheduler: Error executing ' . "$event_name: $_" )
                     for @errors;
+                $output = join '; ', @errors;
             }
 
-            $c->_mark_finished($event);
+            $c->_mark_finished( $event, $output );
         }
     }
 }
@@ -165,6 +169,16 @@ sub dump_these {
     
     # for debugging, we dump out a list of all events with their next
     # scheduled run time
+    return ( 
+        $c->NEXT::dump_these(@_),
+        [ 'Scheduled Events', $c->scheduler_state ],
+    );
+}
+
+sub scheduler_state {
+    my $c = shift;
+    
+    $c->_get_event_state();
 
     my $conf = $c->config->{scheduler};
     my $now  = DateTime->now( time_zone => $conf->{time_zone} );
@@ -172,7 +186,7 @@ sub dump_these {
     my $last_check = $c->_event_state->{last_check};
     my $last_check_dt = DateTime->from_epoch(
         epoch     => $last_check,
-        time_zone => $conf->{time_zone}
+        time_zone => $conf->{time_zone},
     ); 
 
     my $event_dump = [];
@@ -182,6 +196,7 @@ sub dump_these {
             $dump->{$key} = $event->{$key} if $event->{$key};
         }
 
+        # display the next run time
         if ( $event->{set} ) {
             my $next_run = $event->{set}->next($last_check_dt);
             $dump->{next_run} 
@@ -190,13 +205,31 @@ sub dump_these {
                 . q{ } . $next_run->time_zone_short_name;
         }
         
+        # display the last run time
+        my $last_run
+            = $c->_event_state->{events}->{ $event->{event} }->{last_run};
+        if ( $last_run ) {
+            $last_run = DateTime->from_epoch(
+                epoch     => $last_run,
+                time_zone => $conf->{time_zone},
+            );
+            $dump->{last_run} 
+                = $last_run->ymd
+                . q{ } . $last_run->hms
+                . q{ } . $last_run->time_zone_short_name;
+        }
+        
+        # display the result of the last run
+        my $output
+            = $c->_event_state->{events}->{ $event->{event} }->{last_output};
+        if ( $output ) {
+            $dump->{last_output} = $output;
+        }
+            
         push @{$event_dump}, $dump;
     }
     
-    return ( 
-        $c->NEXT::dump_these(@_),
-        [ 'Scheduled Events', $event_dump ],
-    );
+    return $event_dump;
 }        
 
 # check and reload the YAML file with schedule data
@@ -214,8 +247,15 @@ sub _check_yaml {
         my $mtime = ( stat $c->config->{scheduler}->{yaml_file} )->mtime;
         if ( $mtime > $c->_event_state->{yaml_mtime}->{$$} ) {
             $c->_event_state->{yaml_mtime}->{$$} = $mtime;
-            $c->_save_event_state();
 
+            # clean up old PIDs listed in yaml_mtime
+            foreach my $pid ( keys %{ $c->_event_state->{yaml_mtime} } ) {
+                if ( $c->_event_state->{yaml_mtime}->{$pid} < $mtime ) {
+                    delete $c->_event_state->{yaml_mtime}->{$pid};
+                }
+            }            
+            $c->_save_event_state();
+            
             # wipe out all current events and reload from YAML
             $c->_events( [] );
 
@@ -232,7 +272,7 @@ sub _check_yaml {
         }
     };
     if ($@) {
-        $c->log->error("Error reading YAML file: $@");
+        $c->log->error("Scheduler: Error reading YAML file: $@");
     }
 }
 
@@ -281,8 +321,9 @@ sub _get_event_state {
 
         # initialize the state file
         $c->_event_state(
-            {   last_check => time,
-                yaml_mtime => {},
+            {   last_check  => time,
+                events      => {},
+                yaml_mtime  => {},
             }
         );
         $c->_save_event_state();
@@ -295,16 +336,17 @@ sub _mark_running {
 
     $c->_get_event_state();
 
-    return if $c->_event_state->{ $event->{event} };
+    return if 
+        $c->_event_state->{events}->{ $event->{event} }->{running};
 
     # this is a 2-step process to prevent race conditions
     # 1. write the state file with our PID
-    $c->_event_state->{ $event->{event} } = $$;
+    $c->_event_state->{events}->{ $event->{event} }->{running} = $$;
     $c->_save_event_state();
 
     # 2. re-read the state file and make sure it's got the same PID
     $c->_get_event_state();
-    if ( $c->_event_state->{ $event->{event} } == $$ ) {
+    if ( $c->_event_state->{events}->{ $event->{event} }->{running} == $$ ) {
         return 1;
     }
 
@@ -313,9 +355,11 @@ sub _mark_running {
 
 # Mark an event as finished
 sub _mark_finished {
-    my ( $c, $event ) = @_;
+    my ( $c, $event, $output ) = @_;
 
-    $c->_event_state->{ $event->{event} } = 0;
+    $c->_event_state->{events}->{ $event->{event} }->{running}     = 0;
+    $c->_event_state->{events}->{ $event->{event} }->{last_run}    = time;
+    $c->_event_state->{events}->{ $event->{event} }->{last_output} = $output;
     $c->_save_event_state();
 }
 
@@ -651,6 +695,33 @@ being run in the event.
 
 Schedule is a class method for adding scheduled events.  See the
 L<"/SCHEDULING"> section for more information.
+
+=head2 scheduler_state
+
+The current state of all scheduled events is available in an easy-to-use
+format by calling $c->scheduler_state.  You can use this data to build an
+admin view into the scheduling engine, for example.  This same data is also
+displayed on the Catalyst debug screen.
+
+This method returns an array reference containing a hash reference for each
+event.
+
+    [
+        {
+            'last_run'    => '2005-12-29 16:29:33 EST',
+            'auto_run'    => 1,
+            'last_output' => 1,
+            'at'          => '0 0 * * *',
+            'next_run'    => '2005-12-30 00:00:00 EST',
+            'event'       => '/cron/session_cleanup'
+        },
+        {
+            'auto_run'    => 1,
+            'at'          => '0 0 * * *',
+            'next_run'    => '2005-12-30 00:00:00 EST',
+            'event'       => '/cron/build_rss'
+        },
+    ]
 
 =head1 INTERNAL METHODS
 
