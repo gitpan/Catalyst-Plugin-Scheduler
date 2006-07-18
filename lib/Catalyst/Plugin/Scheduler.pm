@@ -10,9 +10,8 @@ use File::stat;
 use NEXT;
 use Set::Scalar;
 use Storable qw/lock_store lock_retrieve/;
-use YAML;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 __PACKAGE__->mk_classdata( '_events' => [] );
 __PACKAGE__->mk_accessors('_event_state');
@@ -259,7 +258,20 @@ sub _check_yaml {
             # wipe out all current events and reload from YAML
             $c->_events( [] );
 
-            my $yaml = YAML::LoadFile( $c->config->{scheduler}->{yaml_file} );
+            my $file = $c->config->{scheduler}->{yaml_file};
+            my $yaml;
+
+            eval { require YAML::Syck; };
+            if( $@ ) {
+                require YAML;
+                $yaml = YAML::LoadFile( "$file" );
+            }
+            else {
+                open( my $fh, $file ) or die $!;
+                my $content = do { local $/; <$fh> };
+                close $fh;
+                $yaml = YAML::Syck::Load( $content );
+            }
             
             foreach my $event ( @{$yaml} ) {
                 $c->schedule( %{$event} );

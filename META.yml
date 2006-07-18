@@ -1,18 +1,8 @@
----
+--- #YAML:1.0
 name: Catalyst-Plugin-Scheduler
-version: 0.06
+version: 0.07
 author:
-  - 'Andy Grundman, <andy@hybridized.org>'
+  - Andy Grundman, <andy@hybridized.org>
 abstract: Schedule events to run in a cron-like fashion
 license: perl
-requires:
-  Catalyst: 5.61
-  DateTime::Event::Cron: 0
-  Set::Scalar: 0
-  Storable: 0
-  YAML: 0
-provides:
-  Catalyst::Plugin::Scheduler:
-    file: lib/Catalyst/Plugin/Scheduler.pm
-    version: 0.06
-generated_by: Module::Build version 0.2611
+generated_by: Module::Build version 0.2612, without YAML.pm
