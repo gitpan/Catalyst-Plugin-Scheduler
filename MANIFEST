@@ -8,6 +8,8 @@ README
 t/01use.t
 t/02pod.t
 t/03podcoverage.t
+t/04critic.rc
+t/04critic.t
 t/04schedule.t
 t/05auto_run.t
 t/06trigger.t

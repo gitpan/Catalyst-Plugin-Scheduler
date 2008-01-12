@@ -11,7 +11,7 @@ use NEXT;
 use Set::Scalar;
 use Storable qw/lock_store lock_retrieve/;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 __PACKAGE__->mk_classdata( '_events' => [] );
 __PACKAGE__->mk_accessors('_event_state');
@@ -157,6 +157,20 @@ sub setup {
     $c->config->{scheduler}->{state_file}  ||= $c->path_to('scheduler.state');
     $c->config->{scheduler}->{hosts_allow} ||= '127.0.0.1';
     $c->config->{scheduler}->{yaml_file}   ||= $c->path_to('scheduler.yml');
+    
+    # Always start with a clean state
+    if ( -e $c->config->{scheduler}->{state_file} ) {
+        $c->log->debug( 
+            'Scheduler: Removing old state file ' .
+            $c->config->{scheduler}->{state_file}
+        ) if $c->config->{scheduler}->{logging};
+        
+        unlink $c->config->{scheduler}->{state_file}
+            or Catalyst::Exception->throw(
+                message => 'Scheduler: Unable to remove old state file '
+                    . $c->config->{scheduler}->{state_file} . " ($!)"
+            );
+    }
 
     $c->NEXT::setup(@_);
 }

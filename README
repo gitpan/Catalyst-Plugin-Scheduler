@@ -4,27 +4,27 @@ NAME
 
 SYNOPSIS
         use Catalyst qw/Scheduler/;
-    
-        # run remove_sessions in the Cron controller every hour
+        
+    # run remove_sessions in the Cron controller every hour
         __PACKAGE__->schedule(
             at    => '0 * * * *',
             event => '/cron/remove_sessions'
         );
-    
-        # Run a subroutine at 4:05am every Sunday
+        
+    # Run a subroutine at 4:05am every Sunday
         __PACKAGE__->schedule(
             at    => '5 4 * * sun',
             event => \&do_stuff,
         );
-    
-        # A long-running scheduled event that must be triggered 
+        
+    # A long-running scheduled event that must be triggered 
         # manually by an authorized user
         __PACKAGE__->schedule(
             trigger => 'rebuild_search_index',
             event   => '/cron/rebuild_search_index',
         );
         $ wget -q http://www.myapp.com/?schedule_trigger=rebuild_search_index
-    
+
 DESCRIPTION
     This plugin allows you to schedule events to run at recurring intervals.
     Events will run during the first request which meets or exceeds the
@@ -75,13 +75,13 @@ SCHEDULING
             at       => '0 * * * *',
             event    => '/cron/remove_sessions',
         );
-    
-        package MyApp::Controller::Cron;
-    
-        sub remove_sessions : Private {
-            my ( $self, $c ) = @_;
         
-            $c->delete_expired_sessions;
+    package MyApp::Controller::Cron;
+        
+    sub remove_sessions : Private {
+            my ( $self, $c ) = @_;
+            
+        $c->delete_expired_sessions;
         }
 
    at
@@ -101,7 +101,7 @@ SCHEDULING
         day of month   1-31
         month          0-12 (or names, see below)
         day of week    0-7 (0 or 7 is Sun, or use names)
-    
+
     Instead of the first five fields, one of seven special strings may
     appear:
 
@@ -140,15 +140,15 @@ SCHEDULING
             event    => '/cron/rebuild_search_index',
             auto_run => 0,
         );
-    
-        package MyApp::Controller::Cron;
-    
-        sub rebuild_search_index : Private {
-            my ( $self, $c ) = @_;
         
-            # rebuild the search index, this may take a long time
+    package MyApp::Controller::Cron;
+        
+    sub rebuild_search_index : Private {
+            my ( $self, $c ) = @_;
+            
+        # rebuild the search index, this may take a long time
         }
-    
+
     Now, the search index will only be rebuilt when a request is made from a
     user whose IP address matches the list in the "hosts_allow" config
     option. To run this event, you probably want to ping the app from a cron
@@ -165,13 +165,13 @@ SCHEDULING
             trigger => 'send_email',
             event   => '/events/send_email',
         );
-    
+
     The event may then be triggered by a standard web request from an
     authorized user. The trigger to run is specified by using a special GET
     parameter, 'schedule_trigger'; the path requested does not matter.
 
         http://www.myapp.com/?schedule_trigger=send_email
-    
+
     By default, manual events may only be triggered by requests made from
     localhost (127.0.0.1). To allow other addresses to run events, use the
     configuration option "hosts_allow".
@@ -201,7 +201,7 @@ SCHEDULING USING A YAML FILE
         - at: 0 0 * * *
           auto_run: 0
           event: /cron/rebuild_search_index
-    
+
 SECURITY
     All events are run inside of an eval container. This protects the user
     from receiving any error messages or page crashes if an event fails to
@@ -215,15 +215,15 @@ PLUGIN SUPPORT
         sub setup {
             my $c = shift;
             $c->NEXT::setup(@_);
-        
-            if ( $c->can('schedule') ) {
+            
+        if ( $c->can('schedule') ) {
                 $c->schedule(
                     at    => '0 * * * *',
                     event => \&cleanup,
                 );
             }
         }
-    
+
 CAVEATS
     The time at which an event will run is determined completely by the
     requests made to the application. Apps with heavy traffic may have
@@ -250,7 +250,7 @@ PERFORMANCE
 METHODS
   schedule
     Schedule is a class method for adding scheduled events. See the
-    "/SCHEDULING" section for more information.
+    "SCHEDULING"" in " section for more information.
 
   scheduler_state
     The current state of all scheduled events is available in an easy-to-use

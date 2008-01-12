@@ -13,7 +13,6 @@ my $build = Module::Build->new(
         'YAML'                  => 0,
     },
     create_makefile_pl => 'passthrough',
-    create_readme      => 1,
     test_files   => [
         glob('t/*.t') 
     ]
