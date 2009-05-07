@@ -11,6 +11,7 @@ my $build = Module::Build->new(
         'Set::Scalar'           => 0,
         'Storable'              => 0,
         'YAML'                  => 0,
+        'MRO::Compat'           => 0,
     },
     create_makefile_pl => 'passthrough',
     test_files   => [

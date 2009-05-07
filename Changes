@@ -1,5 +1,8 @@
 Revision history for Perl extension Catalyst::Plugin::Scheduler
 
+0.09    2009-05-07 09:15:00
+        - Change from NEXT to MRO::Compat. (agladdish)
+
 0.08    2008-01-12 11:00:00
         - Clear existing state file during startup. (hovenko)
 

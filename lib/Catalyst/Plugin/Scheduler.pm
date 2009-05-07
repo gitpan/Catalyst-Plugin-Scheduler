@@ -7,11 +7,11 @@ use DateTime;
 use DateTime::Event::Cron;
 use DateTime::TimeZone;
 use File::stat;
-use NEXT;
 use Set::Scalar;
 use Storable qw/lock_store lock_retrieve/;
+use MRO::Compat;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 __PACKAGE__->mk_classdata( '_events' => [] );
 __PACKAGE__->mk_accessors('_event_state');
@@ -58,7 +58,7 @@ sub schedule {
 sub dispatch {
     my $c = shift;
 
-    $c->NEXT::dispatch(@_);
+    $c->maybe::next::method();
 
     $c->_get_event_state();
 
@@ -172,18 +172,18 @@ sub setup {
             );
     }
 
-    $c->NEXT::setup(@_);
+    $c->maybe::next::method(@_);
 }
 
 sub dump_these {
     my $c = shift;
     
-    return ( $c->NEXT::dump_these(@_) ) unless @{ $c->_events };
-    
+    return ( $c->maybe::next::method(@_) ) unless @{ $c->_events };
+        
     # for debugging, we dump out a list of all events with their next
     # scheduled run time
     return ( 
-        $c->NEXT::dump_these(@_),
+        $c->maybe::next::method(@_),
         [ 'Scheduled Events', $c->scheduler_state ],
     );
 }
@@ -680,8 +680,8 @@ maintenance.  Plugin authors, B<be sure to inform your users> if you do this!
 Events should be registered from a plugin's C<setup> method.
 
     sub setup {
-        my $c = shift;
-        $c->NEXT::setup(@_);
+        my $c = shift;        
+        $c->maybe::next::method(@_);
         
         if ( $c->can('schedule') ) {
             $c->schedule(

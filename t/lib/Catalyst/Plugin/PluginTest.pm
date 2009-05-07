@@ -2,11 +2,13 @@ package Catalyst::Plugin::PluginTest;
 
 use strict;
 use warnings;
-use NEXT;
+
+use MRO::Compat;
+Class::C3::initialize();
 
 sub setup {
     my $c = shift;
-    $c->NEXT::setup(@_);
+    $c->maybe::next::method(@_);
     
     if ( $c->can('schedule') ) {
         $c->schedule(
