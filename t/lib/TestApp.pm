@@ -12,11 +12,4 @@ TestApp->config(
 
 TestApp->setup( qw/Scheduler/ );
 
-sub default : Private {
-    my ( $self, $c ) = @_;
-    
-    $c->res->output( 'default' );
-}
-
 1;
-

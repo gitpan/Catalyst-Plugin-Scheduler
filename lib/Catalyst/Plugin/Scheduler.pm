@@ -11,7 +11,7 @@ use Set::Scalar;
 use Storable qw/lock_store lock_retrieve/;
 use MRO::Compat;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 __PACKAGE__->mk_classdata( '_events' => [] );
 __PACKAGE__->mk_accessors('_event_state');
@@ -644,7 +644,7 @@ configuration option L</hosts_allow>.
 
 As an alternative to using the schedule() method, you may define scheduled
 events in an external YAML file.  By default, the plugin looks for the
-existence of a file called C<schedule.yml> in your application's home
+existence of a file called C<scheduler.yml> in your application's home
 directory.  You can change the filename using the configuration option
 L</yaml_file>.
 

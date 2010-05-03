@@ -1,5 +1,10 @@
 Revision history for Perl extension Catalyst::Plugin::Scheduler
 
+0.10    2010-05-03 11:29:00
+        - Fix warnings in test suite (BRICAS)
+        - Switch to Module::Install (BRICAS)
+        - Fix pod typo (RT #47434)
+
 0.09    2009-05-07 09:15:00
         - Change from NEXT to MRO::Compat. (agladdish)
 

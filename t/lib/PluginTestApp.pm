@@ -15,11 +15,4 @@ PluginTestApp->config(
 
 PluginTestApp->setup( qw/Scheduler PluginTest/ );
 
-sub default : Private {
-    my ( $self, $c ) = @_;
-    
-    $c->res->output( 'default' );
-}
-
 1;
-

@@ -4,20 +4,20 @@ NAME
 
 SYNOPSIS
         use Catalyst qw/Scheduler/;
-        
-    # run remove_sessions in the Cron controller every hour
+    
+        # run remove_sessions in the Cron controller every hour
         __PACKAGE__->schedule(
             at    => '0 * * * *',
             event => '/cron/remove_sessions'
         );
-        
-    # Run a subroutine at 4:05am every Sunday
+    
+        # Run a subroutine at 4:05am every Sunday
         __PACKAGE__->schedule(
             at    => '5 4 * * sun',
             event => \&do_stuff,
         );
-        
-    # A long-running scheduled event that must be triggered 
+    
+        # A long-running scheduled event that must be triggered 
         # manually by an authorized user
         __PACKAGE__->schedule(
             trigger => 'rebuild_search_index',
@@ -75,13 +75,13 @@ SCHEDULING
             at       => '0 * * * *',
             event    => '/cron/remove_sessions',
         );
-        
-    package MyApp::Controller::Cron;
-        
-    sub remove_sessions : Private {
+    
+        package MyApp::Controller::Cron;
+    
+        sub remove_sessions : Private {
             my ( $self, $c ) = @_;
-            
-        $c->delete_expired_sessions;
+        
+            $c->delete_expired_sessions;
         }
 
    at
@@ -140,13 +140,13 @@ SCHEDULING
             event    => '/cron/rebuild_search_index',
             auto_run => 0,
         );
-        
-    package MyApp::Controller::Cron;
-        
-    sub rebuild_search_index : Private {
+    
+        package MyApp::Controller::Cron;
+    
+        sub rebuild_search_index : Private {
             my ( $self, $c ) = @_;
-            
-        # rebuild the search index, this may take a long time
+        
+            # rebuild the search index, this may take a long time
         }
 
     Now, the search index will only be rebuilt when a request is made from a
@@ -179,7 +179,7 @@ SCHEDULING
 SCHEDULING USING A YAML FILE
     As an alternative to using the schedule() method, you may define
     scheduled events in an external YAML file. By default, the plugin looks
-    for the existence of a file called "schedule.yml" in your application's
+    for the existence of a file called "scheduler.yml" in your application's
     home directory. You can change the filename using the configuration
     option "yaml_file".
 
@@ -213,10 +213,10 @@ PLUGIN SUPPORT
     you do this! Events should be registered from a plugin's "setup" method.
 
         sub setup {
-            my $c = shift;
-            $c->NEXT::setup(@_);
-            
-        if ( $c->can('schedule') ) {
+            my $c = shift;        
+            $c->maybe::next::method(@_);
+        
+            if ( $c->can('schedule') ) {
                 $c->schedule(
                     at    => '0 * * * *',
                     event => \&cleanup,

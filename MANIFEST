@@ -1,5 +1,12 @@
-Build.PL
 Changes
+inc/Module/Install.pm
+inc/Module/Install/Base.pm
+inc/Module/Install/Can.pm
+inc/Module/Install/Fetch.pm
+inc/Module/Install/Makefile.pm
+inc/Module/Install/Metadata.pm
+inc/Module/Install/Win32.pm
+inc/Module/Install/WriteAll.pm
 lib/Catalyst/Plugin/Scheduler.pm
 Makefile.PL
 MANIFEST			This list of files
@@ -18,6 +25,8 @@ t/08yaml.t
 t/09long.t
 t/lib/Catalyst/Plugin/PluginTest.pm
 t/lib/PluginTestApp.pm
+t/lib/PluginTestApp/Controller/Root.pm
 t/lib/TestApp.pm
 t/lib/TestApp/Controller/Cron.pm
+t/lib/TestApp/Controller/Root.pm
 t/lib/TestApp/test.yml
